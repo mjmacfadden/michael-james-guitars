@@ -13,13 +13,21 @@ Static site (plain HTML/CSS/JS, no build step) for selling handmade piezo bridge
 Each entry in `data/products.json`:
 ```json
 { "id": "url-safe-id", "name": "...", "price": 15, "shortDescription": "...", "description": "...",
-  "specs": { "Strings": "3" }, "installNotes": "...", "images": ["assets/img/products/x.jpg"],
+  "specs": { "Strings": "3" }, "installNotes": "...", "images": ["assets/img/products/x"], "imageAlts": ["..."],
+  "video": { "src": "assets/video/x.mp4", "poster": "assets/video/x.jpg", "caption": "..." },
   "stripeLink": "", "inStock": true }
 ```
 Prices display as "$15 + shipping". Set `inStock: false` to show "Sold out". Also set `contactEmail` at the top.
 
 ### Photos
-Put web-sized copies (~1200px wide JPG, under ~250 KB) in `assets/img/products/` and list them in `images` (first one is the main/card image). Quick resize: `mogrify -resize 1200x1200\> -quality 82 *.jpg` (ImageMagick).
+Each entry in `images` is a **base path without extension**; the site expects four files per photo: `<base>.jpg` and `<base>.webp` (1600px long side) plus `<base>-800.jpg` and `<base>-800.webp`. The first photo is the card/main image. Don't commit original phone photos/videos (large, and contain GPS EXIF). Example with ImageMagick (auto-orients and strips metadata):
+```
+convert IMG.jpeg -auto-orient -strip -resize 1600x1600 -quality 80 assets/img/products/name.jpg
+convert IMG.jpeg -auto-orient -strip -resize 1600x1600 -quality 78 assets/img/products/name.webp
+convert IMG.jpeg -auto-orient -strip -resize 800x800  -quality 80 assets/img/products/name-800.jpg
+convert IMG.jpeg -auto-orient -strip -resize 800x800  -quality 78 assets/img/products/name-800.webp
+```
+Video: `ffmpeg -i IN.mov -an -vf scale=540:-2 -c:v libx264 -crf 28 -pix_fmt yuv420p -movflags +faststart -map_metadata -1 assets/video/name.mp4`. The home hero background and `assets/img/og-image.jpg` (1200x630 social preview) use the installed-bridge photo.
 
 ## Add Stripe Payment Links (step by step)
 1. Stripe Dashboard → **Product catalog → + Add product**. Name it, set a one-time price of **$15.00 USD**. Repeat per product.

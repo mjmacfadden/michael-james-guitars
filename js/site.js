@@ -11,7 +11,9 @@ const MJG = {
     const m = `mailto:${data.contactEmail}?subject=${encodeURIComponent('Order inquiry: '+p.name)}`;
     return `<a class="btn" href="${m}">Coming soon – email to order</a>`;
   },
-  card(p,data){ return `<div class="card"><a href="product.html?id=${encodeURIComponent(p.id)}"><img src="${MJG.esc(p.images[0])}" alt="${MJG.esc(p.name)}" loading="lazy" width="800" height="600"></a><div class="body"><h3><a href="product.html?id=${encodeURIComponent(p.id)}">${MJG.esc(p.name)}</a></h3><p>${MJG.esc(p.shortDescription)}</p><div class="price">${MJG.money(p.price,data.currency)}</div>${MJG.buy(p,data)}</div></div>`; }
+  // images in products.json are base paths; files exist as <base>.jpg/.webp (1600px) and <base>-800.jpg/.webp
+  pic(base,alt,size,attrs){ const b=MJG.esc(base),s=size||'-800'; return `<picture><source type="image/webp" srcset="${b}-800.webp 800w, ${b}.webp 1600w" sizes="${attrs&&attrs.includes('main')?'(max-width:720px) 100vw, 540px':'(max-width:600px) 100vw, 340px'}"><img src="${b}${s}.jpg" srcset="${b}-800.jpg 800w, ${b}.jpg 1600w" alt="${MJG.esc(alt||'')}" width="1200" height="1600" ${attrs||'loading="lazy"'}></picture>`; },
+  card(p,data){ return `<div class="card"><a href="product.html?id=${encodeURIComponent(p.id)}">${MJG.pic(p.images[0],(p.imageAlts||[])[0]||p.name)}</a><div class="body"><h3><a href="product.html?id=${encodeURIComponent(p.id)}">${MJG.esc(p.name)}</a></h3><p>${MJG.esc(p.shortDescription)}</p><div class="price">${MJG.money(p.price,data.currency)}</div>${MJG.buy(p,data)}</div></div>`; }
 };
 document.addEventListener('DOMContentLoaded', async ()=>{
   const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
@@ -26,7 +28,9 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     if(!p){ detail.innerHTML='<p>Product not found. <a href="shop.html">Back to shop</a></p>'; return; }
     document.title=p.name+' | Michael James Guitars';
     const specs=Object.entries(p.specs||{}).map(([k,v])=>`<tr><td><strong>${MJG.esc(k)}</strong></td><td>${MJG.esc(v)}</td></tr>`).join('');
-    detail.innerHTML=`<div class="product"><div><img id="main-img" src="${MJG.esc(p.images[0])}" alt="${MJG.esc(p.name)}" width="800" height="600"><div class="thumbs">${p.images.length>1?p.images.map(i=>`<img src="${MJG.esc(i)}" alt="" data-src="${MJG.esc(i)}">`).join(''):''}</div></div><div><h1>${MJG.esc(p.name)}</h1><p class="price">${MJG.money(p.price,data.currency)}</p><p>${MJG.esc(p.description)}</p>${MJG.buy(p,data)}<p><small>Checkout is handled securely by Stripe. You can adjust quantity at checkout.</small></p><h2>Specs</h2><table>${specs}</table><h2>Install notes</h2><p>${MJG.esc(p.installNotes)}</p></div></div>`;
-    detail.querySelectorAll('.thumbs img').forEach(t=>t.onclick=()=>document.getElementById('main-img').src=t.dataset.src);
+    const alts=p.imageAlts||[];
+    const video=p.video?`<figure><video controls muted playsinline preload="none" poster="${MJG.esc(p.video.poster)}" width="540" height="960"><source src="${MJG.esc(p.video.src)}" type="video/mp4"></video><figcaption>${MJG.esc(p.video.caption||'')}</figcaption></figure>`:'';
+    detail.innerHTML=`<div class="product"><div><div id="main-img">${MJG.pic(p.images[0],alts[0]||p.name,'','id="main" fetchpriority="high"')}</div><div class="thumbs">${p.images.length>1?p.images.map((i,n)=>`<button type="button" data-n="${n}" aria-label="Show photo ${n+1}"><img src="${MJG.esc(i)}-800.jpg" alt="" width="70" height="93"></button>`).join(''):''}</div>${video}</div><div><h1>${MJG.esc(p.name)}</h1><p class="price">${MJG.money(p.price,data.currency)}</p><p>${MJG.esc(p.description)}</p>${MJG.buy(p,data)}<p><small>Checkout is handled securely by Stripe. Choose quantity and shipping at checkout.</small></p><h2>Specs</h2><table>${specs}</table><h2>Install notes</h2><p>${MJG.esc(p.installNotes)}</p></div></div>`;
+    detail.querySelectorAll('.thumbs button').forEach(t=>t.onclick=()=>{const n=+t.dataset.n;document.getElementById('main-img').innerHTML=MJG.pic(p.images[n],alts[n]||p.name,'','id="main"');});
   }
 });
