@@ -6,7 +6,7 @@ header{border-bottom:2px dashed var(--line);background:var(--card)}
 header .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:12px;padding-bottom:12px}
 .logo img{height:44px;width:auto}
 nav a{margin-left:18px;text-decoration:none;color:var(--ink);font-weight:bold}nav a:hover{color:var(--accent)}
-.hero{padding:90px 0;background:linear-gradient(rgba(43,29,16,.65),rgba(43,29,16,.65)),url(../assets/img/products/piezo-bridge-installed.jpg) center 45%/cover #3b2a1a;color:#f6efe2;text-align:center}
+.hero{padding:90px 0;background:linear-gradient(rgba(43,29,16,.65),rgba(43,29,16,.65)),url(../assets/img/products/piezo-bridge-installed.jpg) center 30%/cover #3b2a1a;color:#f6efe2;text-align:center}
 .hero h1{font-size:clamp(2rem,5vw,3.2rem);margin:0 0 10px}
 .btn{display:inline-block;background:var(--accent);color:#fff;padding:12px 22px;border-radius:4px;text-decoration:none;font-weight:bold;border:0;cursor:pointer;font:inherit}
 .btn:hover{background:#9a531a}.btn.disabled{background:#9c8f7c;cursor:default}
@@ -21,8 +21,8 @@ main{padding:40px 0;min-height:60vh}
 table{border-collapse:collapse;width:100%}td{border-bottom:1px solid var(--line);padding:6px}
 .todo{background:#fff3b0;border:1px dashed #c9a400;padding:2px 6px}
 footer{border-top:2px dashed var(--line);padding:24px 0;text-align:center;font-size:.9rem}
-.hero-video{position:relative;min-height:90vh;min-height:90svh;display:flex;align-items:center;overflow:hidden;padding:60px 0;background:#2b1d10 url(../assets/video/pickup-demo-poster.jpg) center 72%/cover}
-.hero-bg{position:absolute;inset:0;width:100%;height:100%;max-width:none;margin:0;border-radius:0;object-fit:cover;object-position:center 72%;z-index:0}
+.hero-video{position:relative;min-height:90vh;min-height:90svh;display:flex;align-items:center;overflow:hidden;padding:60px 0;background:#2b1d10 url(../assets/video/pickup-demo-poster.jpg) center 30%/cover}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;max-width:none;margin:0;border-radius:0;object-fit:cover;object-position:center 30%;z-index:0}
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(rgba(20,12,5,.55),rgba(20,12,5,.75));z-index:1}
 .hero-content{position:relative;z-index:2;text-shadow:0 2px 8px rgba(0,0,0,.6)}
 .hero-price{font-size:1.4rem;font-weight:bold;color:#e9c98a}
