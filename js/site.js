@@ -34,3 +34,5 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     detail.querySelectorAll('.thumbs button').forEach(t=>t.onclick=()=>{const n=+t.dataset.n;document.getElementById('main-img').innerHTML=MJG.pic(p.images[n],alts[n]||p.name,'','id="main"');});
   }
 });
+// Reduced motion: stop the hero video so only the poster/background image shows.
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.hero-bg').forEach(v=>{v.removeAttribute('autoplay');v.pause();});
