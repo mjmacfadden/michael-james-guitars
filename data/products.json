@@ -1,0 +1,30 @@
+{
+  "contactEmail": "TODO-mike@example.com",
+  "currency": "USD",
+  "products": [
+    {
+      "id": "single-piezo-bridge",
+      "name": "TODO: Single Piezo Bridge Pickup",
+      "price": 15,
+      "shortDescription": "TODO: One-line description for the shop card.",
+      "description": "TODO: Full description. Hand-built piezo bridge pickup for cigar box guitars.",
+      "specs": { "Strings": "TODO", "Bridge length": "TODO", "Output jack": "TODO", "Wood / material": "TODO" },
+      "installNotes": "TODO: Install notes (drilling, jack placement, string spacing).",
+      "images": ["assets/img/products/placeholder.svg"],
+      "stripeLink": "",
+      "inStock": true
+    },
+    {
+      "id": "piezo-bridge-with-jack",
+      "name": "TODO: Piezo Bridge + Jack Kit",
+      "price": 15,
+      "shortDescription": "TODO: One-line description for the shop card.",
+      "description": "TODO: Full description.",
+      "specs": { "Strings": "TODO", "Bridge length": "TODO", "Output jack": "TODO", "Wood / material": "TODO" },
+      "installNotes": "TODO: Install notes.",
+      "images": ["assets/img/products/placeholder.svg"],
+      "stripeLink": "",
+      "inStock": true
+    }
+  ]
+}

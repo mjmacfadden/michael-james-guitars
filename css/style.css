@@ -1,0 +1,22 @@
+:root{--ink:#2b1d10;--wood:#8b5a2b;--accent:#b5651d;--paper:#f6efe2;--card:#fffaf0;--line:#d9c7a5}
+*{box-sizing:border-box}body{margin:0;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:var(--paper);line-height:1.6}
+a{color:var(--accent)}img{max-width:100%;height:auto;display:block}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header{border-bottom:2px dashed var(--line);background:var(--card)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:12px;padding-bottom:12px}
+.logo img{height:44px;width:auto}
+nav a{margin-left:18px;text-decoration:none;color:var(--ink);font-weight:bold}nav a:hover{color:var(--accent)}
+.hero{padding:70px 0;background:linear-gradient(rgba(43,29,16,.75),rgba(43,29,16,.75)),repeating-linear-gradient(90deg,#8b5a2b 0 40px,#7a4e25 40px 80px);color:#f6efe2;text-align:center}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);margin:0 0 10px}
+.btn{display:inline-block;background:var(--accent);color:#fff;padding:12px 22px;border-radius:4px;text-decoration:none;font-weight:bold;border:0;cursor:pointer;font:inherit}
+.btn:hover{background:#9a531a}.btn.disabled{background:#9c8f7c;cursor:default}
+main{padding:40px 0;min-height:60vh}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.card .body{padding:16px;flex:1;display:flex;flex-direction:column;gap:8px}.card h3{margin:0}
+.price{font-weight:bold;color:var(--wood)}
+.product{display:grid;grid-template-columns:1fr 1fr;gap:32px}@media(max-width:720px){.product{grid-template-columns:1fr}nav a{margin:0 14px 0 0}}
+.thumbs{display:flex;gap:8px;margin-top:8px}.thumbs img{width:70px;cursor:pointer;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%}td{border-bottom:1px solid var(--line);padding:6px}
+.todo{background:#fff3b0;border:1px dashed #c9a400;padding:2px 6px}
+footer{border-top:2px dashed var(--line);padding:24px 0;text-align:center;font-size:.9rem}
