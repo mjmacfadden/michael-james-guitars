@@ -28,7 +28,7 @@
         "Underside of the bridge showing the piezo disc and red/black lead going through the top",
         "Bridge beside the hole in the top, with the output jack and saddle"
       ],
-      "video": { "src": "assets/video/pickup-demo.mp4", "poster": "assets/video/pickup-demo-poster.jpg", "caption": "Playing a 3-string build through an amp (muted preview)." },
+      "video": { "src": "assets/video/pickup-demo.mp4", "poster": "assets/video/pickup-demo-poster.jpg", "caption": "Playing a 3-string build through an amp." },
       "stripeLink": "",
       "inStock": true
     }

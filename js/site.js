@@ -29,10 +29,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     document.title=p.name+' | Michael James Guitars';
     const specs=Object.entries(p.specs||{}).map(([k,v])=>`<tr><td><strong>${MJG.esc(k)}</strong></td><td>${MJG.esc(v)}</td></tr>`).join('');
     const alts=p.imageAlts||[];
-    const video=p.video?`<figure><video controls muted playsinline preload="none" poster="${MJG.esc(p.video.poster)}" width="540" height="960"><source src="${MJG.esc(p.video.src)}" type="video/mp4"></video><figcaption>${MJG.esc(p.video.caption||'')}</figcaption></figure>`:'';
-    detail.innerHTML=`<div class="product"><div><div id="main-img">${MJG.pic(p.images[0],alts[0]||p.name,'','id="main" fetchpriority="high"')}</div><div class="thumbs">${p.images.length>1?p.images.map((i,n)=>`<button type="button" data-n="${n}" aria-label="Show photo ${n+1}"><img src="${MJG.esc(i)}-800.jpg" alt="" width="70" height="93"></button>`).join(''):''}</div>${video}</div><div><h1>${MJG.esc(p.name)}</h1><p class="price">${MJG.money(p.price,data.currency)}</p><p>${MJG.esc(p.description)}</p>${MJG.buy(p,data)}<p><small>Checkout is handled securely by Stripe. Choose quantity and shipping at checkout.</small></p><h2>Specs</h2><table>${specs}</table><h2>Install notes</h2><p>${MJG.esc(p.installNotes)}</p></div></div>`;
-    detail.querySelectorAll('.thumbs button').forEach(t=>t.onclick=()=>{const n=+t.dataset.n;document.getElementById('main-img').innerHTML=MJG.pic(p.images[n],alts[n]||p.name,'','id="main"');});
+    const media=p.images.map((i,n)=>({type:'img',src:i,alt:alts[n]||p.name}));
+    if(p.video)media.splice(3,0,{type:'video',src:p.video.src,poster:p.video.poster,alt:p.video.caption||'Demo video'});
+    const show=(m,first)=>m.type==='video'?`<video id="main" controls playsinline preload="metadata" poster="${MJG.esc(m.poster)}" width="540" height="960" aria-label="${MJG.esc(m.alt)}"><source src="${MJG.esc(m.src)}" type="video/mp4"></video>`:MJG.pic(m.src,m.alt,'',first?'id="main" fetchpriority="high"':'id="main"');
+    const thumbs=media.length>1?media.map((m,n)=>`<button type="button" data-n="${n}" aria-label="${m.type==='video'?'Play video':'Show photo '+(n+1)}"${m.type==='video'?' class="vthumb"':''}><img src="${MJG.esc(m.type==='video'?m.poster:m.src+'-800.jpg')}" alt="" width="70" height="93"></button>`).join(''):'';
+    detail.innerHTML=`<div class="product"><div><div id="main-img">${show(media[0],true)}</div><div class="thumbs">${thumbs}</div></div><div><h1>${MJG.esc(p.name)}</h1><p class="price">${MJG.money(p.price,data.currency)}</p><p>${MJG.esc(p.description)}</p>${MJG.buy(p,data)}<p><small>Checkout is handled securely by Stripe. Choose quantity and shipping at checkout.</small></p><h2>Specs</h2><table>${specs}</table><h2>Install notes</h2><p>${MJG.esc(p.installNotes)}</p></div></div>`;
+    detail.querySelectorAll('.thumbs button').forEach(t=>t.onclick=()=>{const n=+t.dataset.n;document.getElementById('main-img').innerHTML=show(media[n]);});
   }
 });
 // Reduced motion: stop the hero video so only the poster/background image shows.
 if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.querySelectorAll('.hero-bg').forEach(v=>{v.removeAttribute('autoplay');v.pause();});
+// Hero sound toggle.
+document.querySelectorAll('.hero-sound').forEach(b=>{const v=document.querySelector('.hero-bg');if(!v)return;b.onclick=()=>{v.muted=!v.muted;if(!v.muted){v.volume=1;v.play();}b.setAttribute('aria-pressed',String(!v.muted));b.textContent=v.muted?'🔇 Sound off':'🔊 Sound on';};});
