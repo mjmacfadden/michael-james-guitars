@@ -1,0 +1,36 @@
+{
+  "contactEmail": "TODO-mike@example.com",
+  "currency": "USD",
+  "products": [
+    {
+      "id": "piezo-bridge-pickup",
+      "name": "Piezo Bridge Pickup for Cigar Box Guitar",
+      "price": 15,
+      "shortDescription": "Hand-made hardwood bridge base with a built-in piezo disc and pre-wired lead.",
+      "description": "A hand-made hardwood bridge base with a piezo disc set into the underside and a twisted red/black lead ready to solder to an output jack. Your saddle sits in the routed slot on top, so the strings drive the piezo directly. Shown on a 3-string build. TODO (Mike): confirm wood species, whether a saddle and/or jack is included, and anything else you want to say.",
+      "specs": {
+        "Base": "Hardwood (TODO: species)",
+        "Pickup": "Piezo disc mounted under the bridge, two slotted mounting/through holes",
+        "Lead": "Twisted red/black wire (TODO: length)",
+        "Saddle": "Slot on top for a saddle (TODO: saddle included? width?)",
+        "Dimensions": "TODO",
+        "Output jack": "Not shown as included (TODO: confirm)",
+        "Strings": "Shown on a 3-string guitar (TODO: works with 4/6?)"
+      },
+      "installNotes": "TODO (Mike): verify. From the photos: drill a hole in the top under the bridge position to pass the lead into the box, set the bridge with the piezo side down over the hole, solder the lead to a 1/4\" output jack mounted in the top or side, then fit the saddle and string up. Plain-English steps and hole size TBD.",
+      "images": [
+        "assets/img/products/piezo-bridge-installed",
+        "assets/img/products/piezo-bridge-underside",
+        "assets/img/products/piezo-bridge-install"
+      ],
+      "imageAlts": [
+        "Piezo bridge pickup installed on a cigar box guitar with three strings and a white saddle",
+        "Underside of the bridge showing the piezo disc and red/black lead going through the top",
+        "Bridge beside the hole in the top, with the output jack and saddle"
+      ],
+      "video": { "src": "assets/video/pickup-demo.mp4", "poster": "assets/video/pickup-demo-poster.jpg", "caption": "Playing a 3-string build through an amp." },
+      "stripeLink": "",
+      "inStock": true
+    }
+  ]
+}
