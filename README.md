@@ -4,7 +4,7 @@ Static site (plain HTML/CSS/JS, no build step) for selling handmade piezo bridge
 
 ## Files
 - `data/products.json` — **single source of truth** for products, prices, Stripe links, and the contact email.
-- `assets/logo.svg` — logo (text placeholder). `assets/favicon.svg` — favicon.
+- `assets/img/michael_james_logo.png` — header logo. `assets/favicon.svg` — favicon.
 - `assets/img/products/` — product photos.
 - `index.html`, `shop.html`, `product.html?id=...`, `about.html`, `faq.html`, `contact.html`, `success.html`, `cancel.html`, `404.html`.
 - Search the repo for `TODO` to find everything still to fill in.
@@ -43,7 +43,7 @@ Test first in Stripe **Test mode** with card `4242 4242 4242 4242`.
 Note: each Payment Link is one product (quantity adjustable). A multi-product cart would need a small backend, so it's intentionally not included.
 
 ## Swap the logo
-Replace `assets/logo.svg` with your logo (same filename). Using a PNG instead? Save it as `assets/logo.png` and change `assets/logo.svg` → `assets/logo.png` in the header of each `.html` file (one find/replace). Replace `assets/favicon.svg` too if you like.
+The header uses `assets/img/michael_james_logo.png`. Replace that file (keep the same name) to update every page. Change `assets/favicon.svg` too if you like.
 
 ## Enable GitHub Pages
 Repo **Settings → Pages → Source: Deploy from a branch → `main` / `/ (root)`** → Save. Site appears at `https://mjmacfadden.github.io/michael-james-guitars/` in a minute or two. Custom domain: add it on the same page.
