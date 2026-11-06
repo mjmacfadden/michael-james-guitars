@@ -1,0 +1,42 @@
+{
+  "hosting": {
+    "site": "michael-james-guitars",
+    "public": "public",
+    "cleanUrls": false,
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      { "source": "/api/checkout", "function": { "functionId": "createCheckoutSession", "region": "us-central1" } },
+      { "source": "/api/stripe-webhook", "function": { "functionId": "stripeWebhook", "region": "us-central1" } }
+    ],
+    "headers": [
+      { "source": "/api/**", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+      { "source": "**", "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ] }
+    ]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs22",
+      "ignore": ["node_modules", ".git", "test", "*.log", ".env*", ".secret.local"]
+    }
+  ],
+  "firestore": {
+    "database": "orders",
+    "edition": "enterprise",
+    "dataAccessMode": "FIRESTORE_NATIVE",
+    "location": "us-central1",
+    "rules": "firestore.rules"
+  },
+  "emulators": {
+    "hosting": { "port": 5000 },
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8085 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

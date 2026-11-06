@@ -1,0 +1,28 @@
+# Generated Hosting mirror — regenerate with: node scripts/stage-public.mjs
+public/
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Local env / secrets (never commit)
+.env
+.env.*
+!.env.example
+functions/.env
+functions/.env.*
+!functions/.env.example
+functions/.secret.local
+functions/.runtimeconfig.json
+
+# Firebase / emulator logs & cache
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+*-debug.log
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
