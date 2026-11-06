@@ -57,17 +57,11 @@ jobs:
           CHANNEL=$(echo "$CHANNEL" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g; s/^-+//; s/-+$//; s/-{2,}/-/g')
           CHANNEL=${CHANNEL:-manual-preview}
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
-          OUT=$(npx -y firebase-tools@latest hosting:channel:deploy "$CHANNEL" \
-            --project michael-james-guitars \
-            --expires 14d \
-            --non-interactive 2>&1)
-          echo "$OUT"
-          URL=$(echo "$OUT" | sed -nE 's/.*https:\/\/(michael-james-guitars--[a-z0-9-]+\.web\.app).*/https:\/\/\1/p' | head -1)
-          if [ -z "$URL" ]; then
-            URL=$(echo "$OUT" | grep -Eo 'https://michael-james-guitars--[a-z0-9.-]+' | head -1)
-          fi
+          # Stream logs (do not hide firebase errors); also write JSON for URL parsing.
+          npx -y firebase-tools@latest hosting:channel:deploy "$CHANNEL"             --project michael-james-guitars             --expires 14d             --non-interactive             --json | tee deploy.json
+          URL=$(node -e 'const fs=require("fs"); const j=JSON.parse(fs.readFileSync("deploy.json","utf8")); const r=j.result||j; const u=(r.url)||(r.channel&&r.channel.url)||(r["hosting"]&&r.hosting.url)||""; if(!u){console.error(JSON.stringify(j).slice(0,2000)); process.exit(1);} console.log(u);')
           echo "url=$URL" >> "$GITHUB_OUTPUT"
-          test -n "$URL"
+          echo "Preview URL: $URL"
       - name: Comment preview URL on PR
         if: github.event_name == 'pull_request' && steps.deploy.outputs.url != ''
         uses: actions/github-script@v7
