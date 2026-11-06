@@ -53,12 +53,9 @@ jobs:
           else
             CHANNEL="${{ inputs.channel }}"
           fi
-          # sanitize channel id
           CHANNEL=$(echo "$CHANNEL" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g; s/^-+//; s/-+$//; s/-{2,}/-/g')
           CHANNEL=${CHANNEL:-manual-preview}
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
-          # Stream human logs on stderr; write JSON to deploy.json for URL parse.
-          # firebase --json nests URL at result.<site>.url
           set +e
           npx -y firebase-tools@latest hosting:channel:deploy "$CHANNEL" \
             --project michael-james-guitars \
@@ -72,38 +69,7 @@ jobs:
             echo "firebase hosting:channel:deploy failed rc=$DEPLOY_RC" >&2
             exit "$DEPLOY_RC"
           fi
-          URL=$(node <<'NODE'
-const fs = require("fs");
-const raw = fs.readFileSync("deploy.json", "utf8").trim();
-function parseMaybe(s) {
-  try { return JSON.parse(s); } catch { return null; }
-}
-let j = parseMaybe(raw);
-if (!j) {
-  // If multiple JSON blobs were concatenated, take the last complete object.
-  const matches = [...raw.matchAll(/\{[\s\S]*?\n?\}/g)];
-  for (let i = matches.length - 1; i >= 0; i--) {
-    j = parseMaybe(matches[i][0]);
-    if (j) break;
-  }
-}
-function findUrl(o, depth = 0) {
-  if (!o || typeof o !== "object" || depth > 6) return "";
-  if (typeof o.url === "string" && /^https?:\/\//.test(o.url)) return o.url;
-  for (const v of Object.values(o)) {
-    const u = findUrl(v, depth + 1);
-    if (u) return u;
-  }
-  return "";
-}
-const u = findUrl(j);
-if (!u) {
-  console.error("Could not parse preview URL from:", raw.slice(0, 2000));
-  process.exit(1);
-}
-process.stdout.write(u);
-NODE
-)
+          URL=$(node scripts/parse-hosting-channel-url.mjs deploy.json)
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Preview URL: $URL"
       - name: Comment preview URL on PR
