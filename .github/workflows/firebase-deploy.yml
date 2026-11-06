@@ -1,12 +1,12 @@
-# PREPARED, NOT ACTIVE: manual dispatch only, and the job is hard-disabled until reviewed.
-# Requires (not yet created): a least-privilege deploy identity via Workload Identity Federation
-# (repo variables GCP_WIF_PROVIDER, GCP_DEPLOY_SA). No JSON keys. No secrets stored here.
+# DISABLED: Functions / combined deploy is intentionally off.
+# Live website Hosting auto-publishes via firebase-hosting-live.yml on push to main.
+# Do not enable this file for Functions/Firestore/Secret Manager without a separate review.
 name: Firebase deploy (manual, disabled)
 on:
   workflow_dispatch:
     inputs:
       target:
-        description: "hosting | functions | both"
+        description: "hosting | functions | both — job stays disabled"
         required: true
         default: hosting
 permissions:
@@ -19,26 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm, cache-dependency-path: functions/package-lock.json }
+        with: { node-version: 22, cache: npm, cache-dependency-path: functions/package-lock.json }
       - run: npm ci --prefix functions
       - run: npm --prefix functions run lint && npm --prefix functions test && npm --prefix functions run catalog:check
-      - run: npm audit --omit=dev --prefix functions
   deploy:
     needs: test
-    if: ${{ false }} # remove only after review + E2E test verification
+    if: ${{ false }} # Hosting live uses firebase-hosting-live.yml; keep Functions off
     runs-on: ubuntu-latest
-    environment: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci --prefix functions && node scripts/stage-public.mjs
-      - uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOY_SA }}
-      - run: |
-          case "${{ inputs.target }}" in
-            hosting) ONLY=hosting ;; functions) ONLY=functions ;; both) ONLY=hosting,functions ;; *) exit 1 ;;
-          esac
-          npx -y firebase-tools@latest deploy --project michael-james-guitars --only "$ONLY" --non-interactive
+      - run: echo "disabled"

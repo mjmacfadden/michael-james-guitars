@@ -1,6 +1,6 @@
 # Michael James Guitars — storefront
 
-Static site (plain HTML/CSS/JS, no build step) for selling handmade piezo bridge pickups for cigar box guitars. Hosted free on GitHub Pages; checkout via **Stripe Payment Links** (no server, no Shopify).
+Static site (plain HTML/CSS/JS, no build step) for selling handmade piezo bridge pickups for cigar box guitars. Live site on **Firebase Hosting** (`https://michael-james-guitars.web.app`); checkout via **Stripe Payment Links** in test/legacy mode until backend cutover.
 
 ## Files
 - `data/products.json` — **single source of truth** for products, prices, Stripe links, and the contact email.
@@ -35,7 +35,7 @@ Video: `ffmpeg -i IN.mov -an -vf scale=540:-2 -c:v libx264 -crf 28 -pix_fmt yuv4
 3. **Payment Links → + New** → choose the product.
    - Turn on **Let customers adjust quantity** (e.g. 1–10).
    - Under options, turn on **Collect customers' addresses → Shipping addresses** (choose allowed countries) and **add the shipping rate(s)** from step 2.
-   - **After payment** → *Don't show confirmation page; redirect customers to your website* → `https://mjmacfadden.github.io/michael-james-guitars/success.html` (or your custom domain + `/success.html`).
+   - **After payment** → *Don't show confirmation page; redirect customers to your website* → `https://michael-james-guitars.web.app/success.html` (or your custom domain + `/success.html`).
 4. Create the link, copy the URL (`https://buy.stripe.com/...`).
 5. Paste it into that product's `"stripeLink"` in `data/products.json`, commit, push. The button changes from "Coming soon – email to order" to "Buy now".
 Test first in Stripe **Test mode** with card `4242 4242 4242 4242`.
@@ -45,8 +45,25 @@ Note: each Payment Link is one product (quantity adjustable). A multi-product ca
 ## Swap the logo
 The header uses `assets/img/michael_james_logo.png`. Replace that file (keep the same name) to update every page. Change `assets/favicon.svg` too if you like.
 
-## Enable GitHub Pages
-Repo **Settings → Pages → Source: Deploy from a branch → `main` / `/ (root)`** → Save. Site appears at `https://mjmacfadden.github.io/michael-james-guitars/` in a minute or two. Custom domain: add it on the same page.
+## Deploy (Firebase Hosting via GitHub Actions)
 
-## Preview locally
-`python3 -m http.server 8000` then open http://localhost:8000 (a server is needed because products load via fetch).
+Live site: **https://michael-james-guitars.web.app**
+
+| Event | What runs | Result |
+| --- | --- | --- |
+| Open / update a PR (same repo) | `firebase-hosting-preview.yml` | Temporary preview URL + tests |
+| Merge / push to `main` | `firebase-hosting-live.yml` | Publishes **Hosting only** to live |
+| Functions / Firestore / secrets | *not* auto-deployed | Deploy those manually after review |
+
+Auth is short-lived OIDC → Workload Identity Federation (no JSON service-account keys in the repo).
+
+### Day-to-day workflow
+1. Pull latest `main` into your local clone (keep any uncommitted Mac edits; stash or commit them on a side branch first if git complains — do **not** `reset --hard`).
+2. Create / switch to a feature branch; edit storefront or config; commit; push the branch.
+3. Open a PR into `main`. Actions runs tests and deploys a **preview** channel — use that URL to review.
+4. When the preview looks right and checks are green, **merge** the PR. That push to `main` auto-publishes Hosting to live.
+5. Watch progress under the repo **Actions** tab (`Firebase Hosting live`). Confirm https://michael-james-guitars.web.app.
+6. Cloud Functions / backend / Stripe live mode are **not** published by this flow — treat those as separate, explicit steps.
+
+### Preview locally
+`python3 -m http.server 8000` then open http://localhost:8000 (a server is needed because products load via fetch). For the staged Hosting mirror: `node scripts/stage-public.mjs` then serve `public/`.

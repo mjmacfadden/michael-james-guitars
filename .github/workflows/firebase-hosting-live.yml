@@ -1,0 +1,48 @@
+# Firebase Hosting LIVE publish on main (OIDC/WIF). Hosting only — never Functions/Firestore/secrets.
+# Stripe live mode is unrelated and stays OFF until separately approved.
+name: Firebase Hosting live
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: hosting-live
+  cancel-in-progress: false
+jobs:
+  live:
+    # Same-repo main only — never run untrusted fork code with cloud credentials.
+    if: >-
+      github.repository == 'mjmacfadden/michael-james-guitars' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - name: Install & test functions
+        run: |
+          npm ci --prefix functions
+          npm --prefix functions test
+          npm --prefix functions run catalog:check
+      - name: Stage static Hosting mirror
+        run: node scripts/stage-public.mjs
+      - name: Authenticate to Google Cloud (OIDC/WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_HOSTING_PREVIEW_SA }}
+      - name: Deploy Hosting (live)
+        run: |
+          set -euo pipefail
+          npx -y firebase-tools@latest deploy \
+            --only hosting \
+            --project michael-james-guitars \
+            --non-interactive
+          echo "Live URL: https://michael-james-guitars.web.app"
