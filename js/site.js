@@ -141,8 +141,8 @@ function wireBuyQtyStepper(formEl){
     inp.value=String(next);
     sync();
   };
-  if(up) up.addEventListener('click',(e)=>{ if(up.disabled){ e.preventDefault(); return; } step(1); });
-  if(down) down.addEventListener('click',(e)=>{ if(down.disabled){ e.preventDefault(); return; } step(-1); });
+  if(up) up.addEventListener('click',(e)=>{ if(up.disabled){ e&&e.preventDefault&&e.preventDefault(); return; } step(1); });
+  if(down) down.addEventListener('click',(e)=>{ if(down.disabled){ e&&e.preventDefault&&e.preventDefault(); return; } step(-1); });
   inp.addEventListener('input', sync);
   inp.addEventListener('change', sync);
   sync();

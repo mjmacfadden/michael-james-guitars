@@ -57,7 +57,8 @@ function fakeForm(initial = '1') {
         listeners.set(this, list);
       },
       click() {
-        for (const { type, fn } of listeners.get(this) || []) if (type === 'click') fn();
+        const ev = { preventDefault() {} };
+        for (const { type, fn } of listeners.get(this) || []) if (type === 'click') fn(ev);
       },
       dispatch(type) {
         for (const { type: t, fn } of listeners.get(this) || []) if (t === type) fn();
@@ -100,11 +101,9 @@ test('qty stepper: typing clamp, arrows step, disable at 1 and 10', () => {
   assert.equal(up.disabled, true);
   assert.equal(down.disabled, false);
 
-  up.click(); // no-op while disabled handler still steps? our click always fires step — disabled buttons shouldn't fire in real DOM; simulate by not clicking when disabled
-  // Real browsers don't fire click on disabled buttons; our fake still would — re-sync after manual overshoot:
-  inp.value = '10';
-  inp.dispatch('change');
   assert.equal(up.disabled, true);
+  up.click(); // disabled → no-op
+  assert.equal(inp.value, '10');
 
   down.click();
   assert.equal(inp.value, '9');
