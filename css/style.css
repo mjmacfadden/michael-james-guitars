@@ -76,9 +76,19 @@ footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;font-si
 .lightbox-close{position:fixed;top:16px;right:16px;width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.5);color:#fff;font-size:1.3rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
 
 .buy-form{display:flex;flex-direction:column;gap:12px;margin:16px 0;padding:16px;border:1px solid var(--line);border-radius:6px;background:var(--card);max-width:360px}
-.buy-form label{display:flex;flex-direction:column;gap:4px;font-weight:bold;font-size:.95rem}
+.buy-form .qty-label{display:block;font-weight:bold;font-size:.95rem}
 .buy-form select,.buy-form input[type=number]{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink)}
-.buy-form .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.buy-form .btn{width:100%;text-align:center;box-sizing:border-box}
+.buy-form .qty-stepper{display:flex;align-items:stretch;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:4px;background:#fff;overflow:hidden}
+.buy-form .qty-stepper input[type=number]{flex:1 1 auto;min-width:0;width:100%;border:0;border-radius:0;padding:10px 12px;background:transparent;color:var(--ink);-moz-appearance:textfield;appearance:textfield}
+.buy-form .qty-stepper input[type=number]::-webkit-outer-spin-button,
+.buy-form .qty-stepper input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.buy-form .qty-stepper-btns{display:flex;flex-direction:column;flex:0 0 auto;border-left:1px solid var(--line);min-width:2.5rem}
+.buy-form .qty-btn{flex:1 1 0;margin:0;padding:2px 8px;border:0;background:var(--card);color:var(--ink);cursor:pointer;font:inherit;font-size:.7rem;line-height:1;min-height:1.4rem}
+.buy-form .qty-btn + .qty-btn{border-top:1px solid var(--line)}
+.buy-form .qty-btn:hover:not(:disabled){background:#e8dfd0}
+.buy-form .qty-btn:disabled{opacity:.35;cursor:default}
+.buy-form .row{display:block}
 .cart-btn{position:relative;background:none;border:0;border-radius:4px;padding:6px 10px;font-size:1.35rem;line-height:1;cursor:pointer;color:var(--ink)}
 .cart-btn .cart-count{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--accent);color:#fff;font-size:.7rem;font-weight:bold;display:inline-flex;align-items:center;justify-content:center}
 .cart-btn .cart-count:empty,.cart-btn .cart-count[data-n="0"]{display:none}
