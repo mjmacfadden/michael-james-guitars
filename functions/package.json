@@ -1,0 +1,22 @@
+{
+  "name": "mjg-checkout-functions",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:emulator": "cd .. && firebase emulators:exec --only firestore --project demo-mjg 'npm --prefix functions exec -- node --test test/emulator/'",
+    "catalog:build": "node scripts/build-catalog.js",
+    "catalog:check": "node scripts/build-catalog.js --check",
+    "lint": "node --check src/*.js scripts/*.js"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^9.4.0",
+    "firebase-admin": "^14.5.0",
+    "firebase-functions": "^7.4.0",
+    "stripe": "^23.1.0"
+  }
+}

@@ -1,0 +1,89 @@
+# Firebase Hosting PREVIEW only (OIDC/WIF). Live auto-publish intentionally OFF.
+# Does not deploy Cloud Functions, Firestore, or secrets.
+name: Firebase Hosting preview
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Preview channel id (letters/numbers/hyphens)"
+        required: false
+        default: manual-preview
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+concurrency:
+  group: hosting-preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  preview:
+    # Same-repo only — never run untrusted fork PR code with cloud credentials.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - name: Install & test functions
+        run: |
+          npm ci --prefix functions
+          npm --prefix functions test
+          npm --prefix functions run catalog:check
+      - name: Stage static Hosting mirror
+        run: node scripts/stage-public.mjs
+      - name: Authenticate to Google Cloud (OIDC/WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_HOSTING_PREVIEW_SA }}
+      - name: Deploy Hosting preview channel
+        id: deploy
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANNEL="pr-${{ github.event.pull_request.number }}"
+          else
+            CHANNEL="${{ inputs.channel }}"
+          fi
+          # sanitize channel id
+          CHANNEL=$(echo "$CHANNEL" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g; s/^-+//; s/-+$//; s/-{2,}/-/g')
+          CHANNEL=${CHANNEL:-manual-preview}
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+          OUT=$(npx -y firebase-tools@latest hosting:channel:deploy "$CHANNEL" \
+            --project michael-james-guitars \
+            --expires 14d \
+            --non-interactive 2>&1)
+          echo "$OUT"
+          URL=$(echo "$OUT" | sed -nE 's/.*https:\/\/(michael-james-guitars--[a-z0-9-]+\.web\.app).*/https:\/\/\1/p' | head -1)
+          if [ -z "$URL" ]; then
+            URL=$(echo "$OUT" | grep -Eo 'https://michael-james-guitars--[a-z0-9.-]+' | head -1)
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          test -n "$URL"
+      - name: Comment preview URL on PR
+        if: github.event_name == 'pull_request' && steps.deploy.outputs.url != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}';
+            const channel = '${{ steps.deploy.outputs.channel }}';
+            const body = `### Firebase Hosting preview\n- Channel: \`${channel}\`\n- URL: ${url}\n\nLive auto-publish remains **off**. This preview is Hosting-only (Functions unchanged).`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes('Firebase Hosting preview'));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
+            }
