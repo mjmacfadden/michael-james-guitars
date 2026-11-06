@@ -116,6 +116,38 @@ const Cart = {
   }
 };
 
+
+/** Product buy-box qty: full-width stepper, always-visible ▲/▼, clamp 1..10. */
+function wireBuyQtyStepper(formEl){
+  const inp=formEl.querySelector('input[name="qty"]');
+  if(!inp) return;
+  const min=Math.max(1, parseInt(inp.min,10)||1);
+  const max=Math.max(min, parseInt(inp.max,10)||10);
+  const up=formEl.querySelector('[data-qty-step="1"]');
+  const down=formEl.querySelector('[data-qty-step="-1"]');
+  const sync=()=>{
+    let v=parseInt(inp.value,10);
+    if(!Number.isFinite(v)) v=min;
+    v=Math.max(min, Math.min(max, v));
+    inp.value=String(v);
+    inp.setAttribute('aria-valuenow', String(v));
+    if(up) up.disabled = v>=max;
+    if(down) down.disabled = v<=min;
+  };
+  const step=(delta)=>{
+    const cur=parseInt(inp.value,10);
+    const base=Number.isFinite(cur)?cur:min;
+    const next=Math.max(min, Math.min(max, base+delta));
+    inp.value=String(next);
+    sync();
+  };
+  if(up) up.addEventListener('click',(e)=>{ if(up.disabled){ e&&e.preventDefault&&e.preventDefault(); return; } step(1); });
+  if(down) down.addEventListener('click',(e)=>{ if(down.disabled){ e&&e.preventDefault&&e.preventDefault(); return; } step(-1); });
+  inp.addEventListener('input', sync);
+  inp.addEventListener('change', sync);
+  sync();
+}
+
 document.addEventListener('DOMContentLoaded', async ()=>{
   const y=document.getElementById('year'); if(y) y.textContent=new Date().getFullYear();
   Cart.render();
@@ -140,26 +172,34 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       const show=(m,first)=>m.type==='video'?`<video id="main" controls playsinline preload="metadata" poster="${MJG.esc(m.poster)}" width="540" height="960" aria-label="${MJG.esc(m.alt)}"><source src="${MJG.esc(m.src)}" type="video/mp4"></video>`:MJG.pic(m.src,m.alt,'',first?'id="main" fetchpriority="high"':'id="main"');
       const thumbs=media.length>1?media.map((m,n)=>`<button type="button" data-n="${n}" aria-label="${m.type==='video'?'Play video':'Show photo '+(n+1)}"${m.type==='video'?' class="vthumb"':''}><img src="${MJG.esc(m.type==='video'?m.poster:m.src+'-800.jpg')}" alt="" width="70" height="93"></button>`).join(''):'';
       const form = p.inStock ? `<form class="buy-form" id="buy-form">
-        <div class="row">
-          <label>Quantity<input type="number" name="qty" min="1" max="20" value="1" required></label>
+        <label class="qty-label" for="buy-qty">Quantity</label>
+        <div class="qty-stepper" role="group" aria-label="Quantity">
+          <input id="buy-qty" type="number" name="qty" min="1" max="10" value="1" required inputmode="numeric" aria-valuemin="1" aria-valuemax="10" aria-valuenow="1">
+          <div class="qty-stepper-btns">
+            <button type="button" class="qty-btn qty-up" data-qty-step="1" aria-label="Increase quantity">▲</button>
+            <button type="button" class="qty-btn qty-down" data-qty-step="-1" aria-label="Decrease quantity">▼</button>
+          </div>
         </div>
         <button type="submit" class="btn">Add to cart</button>
       </form>` : '<span class="btn disabled">Sold out</span>';
       detail.innerHTML=`<div class="product"><div><div id="main-img">${show(media[0],true)}</div><div class="thumbs">${thumbs}</div></div><div><h1>${MJG.esc(p.name)}</h1><p class="price">${MJG.money(p.price,data.currency)}</p><p>${MJG.esc(p.description)}</p>${form}<p><small>Choose a quantity, then add to cart. One ungrooved saddle fits 3- or 4-string guitars.</small></p><h2>Specs</h2><table>${specs}</table><h2>Install notes</h2><p>${MJG.esc(p.installNotes)}</p></div></div>`;
       detail.querySelectorAll('.thumbs button').forEach(t=>t.onclick=()=>{const n=+t.dataset.n;document.getElementById('main-img').innerHTML=show(media[n]);});
       const formEl=document.getElementById('buy-form');
-      if(formEl) formEl.onsubmit=(e)=>{
-        e.preventDefault();
-        const fd=new FormData(formEl);
-        Cart.add({
-          id:p.id,
-          name:p.name,
-          price:p.price,
-          variantId:String(p.defaultVariantId||'standard'),
-          qty:Math.max(1, Math.min(20, +fd.get('qty')||1)),
-          image:(p.images[0]||'')+'-800.jpg'
-        });
-      };
+      if(formEl){
+        wireBuyQtyStepper(formEl);
+        formEl.onsubmit=(e)=>{
+          e.preventDefault();
+          const fd=new FormData(formEl);
+          Cart.add({
+            id:p.id,
+            name:p.name,
+            price:p.price,
+            variantId:String(p.defaultVariantId||'standard'),
+            qty:Math.max(1, Math.min(10, +fd.get('qty')||1)),
+            image:(p.images[0]||'')+'-800.jpg'
+          });
+        };
+      }
     }
   } else {
     try{ data = await MJG.load(); }catch(e){}
