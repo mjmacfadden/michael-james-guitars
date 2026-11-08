@@ -21,17 +21,13 @@
       "id": "piezo-bridge-pickup",
       "name": "Piezo Bridge Pickup for Cigar Box Guitar",
       "shortDescription": "Hand-made hardwood bridge base with a built-in piezo disc, pre-wired lead, and an ungrooved saddle that fits 3- or 4-string cigar box guitars.",
-      "description": "A hand-made hardwood bridge base with a piezo disc set into the underside and a twisted red/black lead ready to solder to an output jack. An ungrooved saddle is supplied in the routed slot on top, so the same bridge works on both 3- and 4-string builds — groove the saddle yourself for your string count if you want. Photos show a 3-string example. TODO (Mike): confirm wood species, whether a jack is included, and anything else you want to say.",
+      "description": "A hand-made hardwood bridge base with a piezo disc set into the underside and a twisted red/black lead ready to solder to an output jack. An ungrooved saddle is supplied in the routed slot on top, so the same bridge works on both 3- and 4-string builds — groove the saddle yourself for your string count if you want. Photos show a 3-string example.",
       "specs": {
-        "Base": "Hardwood (TODO: species)",
         "Pickup": "Piezo disc mounted under the bridge, two slotted mounting/through holes",
-        "Lead": "Twisted red/black wire (TODO: length)",
         "Saddle": "Ungrooved saddle included in the top slot — suitable for 3- or 4-string guitars",
-        "Dimensions": "TODO",
-        "Output jack": "Not shown as included (TODO: confirm)",
         "Compatibility": "Works with 3- and 4-string cigar box guitars (one ungrooved saddle)"
       },
-      "installNotes": "TODO (Mike): verify. From the photos: drill a hole in the top under the bridge position to pass the lead into the box, set the bridge with the piezo side down over the hole, solder the lead to a 1/4\" output jack mounted in the top or side, then fit the ungrooved saddle and string up (groove the saddle for your string count if desired). Plain-English steps and hole size TBD.",
+      "installNotes": "From the photos: drill a hole in the top under the bridge position to pass the lead into the box, set the bridge with the piezo side down over the hole, solder the lead to a 1/4\" output jack mounted in the top or side, then fit the ungrooved saddle and string up (groove the saddle for your string count if desired).",
       "images": [
         "assets/img/products/piezo-bridge-installed",
         "assets/img/products/piezo-bridge-underside",
