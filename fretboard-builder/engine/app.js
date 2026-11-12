@@ -23,6 +23,7 @@
     headstockExt: $('headstock-ext'),
     fbRadius: $('fb-radius'),
     edgeFillet: $('edge-fillet'),
+    preset: $('preset'),
     downloads: $('downloads'), filename: $('filename'),
     sizeOut: $('size-out'), holesOut: $('holes-out'), slotsOut: $('slots-out'),
     warnings: $('warnings'),
@@ -480,6 +481,38 @@
   // ------------------------------------------------------------------
   // Events
   // ------------------------------------------------------------------
+  // Presets fill in a standard set of values (see Fretboard.PRESETS).
+  // 'custom' changes nothing. Values are written straight into the
+  // controls (no input events fire), then the board rebuilds once.
+  // Editing any of those controls afterwards flips the menu to Custom.
+  var PRESET_CONTROLS = {
+    strings: 'strings', frets: 'frets', fretMode: 'fret-mode', scaleIn: 'scale',
+    nutWidthIn: 'nut-width', heelWidthIn: 'heel-width',
+    fretHeightIn: 'fret-height', slotHeightMm: 'slot-height'
+  };
+  function applyPreset(id) {
+    var preset = Fretboard.PRESETS[id];
+    if (!preset) return;
+    Object.keys(PRESET_CONTROLS).forEach(function (key) {
+      $(PRESET_CONTROLS[key]).value = String(preset.values[key]);
+    });
+    // keep the scale-length menu in step with the new scale
+    var match = 'custom';
+    var opts = els.scalePreset.options || [];
+    for (var i = 0; i < opts.length; i++) {
+      if (opts[i].value !== 'custom' && Number(opts[i].value) === preset.values.scaleIn) match = opts[i].value;
+    }
+    els.scalePreset.value = match;
+    rebuild();
+  }
+  function presetToCustom() { els.preset.value = 'custom'; }
+  els.preset.addEventListener('change', function () { applyPreset(els.preset.value); });
+  Object.keys(PRESET_CONTROLS).map(function (k) { return PRESET_CONTROLS[k]; })
+    .concat(['scale-preset']).forEach(function (id) {
+      $(id).addEventListener('input', presetToCustom);
+      $(id).addEventListener('change', presetToCustom);
+    });
+
   els.strings.addEventListener('change', function () {
     var nut = NUT_DEFAULTS[els.strings.value] || 1.5;
     els.nutWidth.value = nut;

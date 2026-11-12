@@ -14,7 +14,7 @@ No Functions, Firestore or Stripe involved.
 | `design-config.js` | Versioned, shareable design config (`#design=` links) + the disabled "Order this" hook | **Yes** |
 | `store-page.js` | Share button, keeps the URL as a live share link, order-button gate | **Yes** |
 | `ORDERING.md` | Plan for letting customers order the boards they design | **Yes** |
-| `engine/` | `geometry.js`, `stl.js`, `app.js`, `test.js`, `vendor/earcut` copied **verbatim** from upstream | **No, edit upstream** |
+| `engine/` | `geometry.js`, `stl.js`, `app.js`, `test.js`, `index.html` (the standalone page, not published here), `vendor/earcut` copied **verbatim** from upstream | **No, edit upstream** |
 | `UPSTREAM.json` | Which upstream commit `engine/` came from, plus a checksum per file | Generated |
 
 ## Source of truth
@@ -35,7 +35,7 @@ Why this split:
 Guard rails (all run by `npm --prefix functions test`, which CI runs on every PR):
 - `engine/` must match `UPSTREAM.json` byte-for-byte, so a stray edit here fails CI.
 - The upstream geometry suite (`engine/test.js`) must print `ALL GEOMETRY TESTS PASSED`.
-- Every element id `engine/app.js` reads must exist on the store page, and the page's control defaults must
+- The store page's controls must be the same markup as the standalone page (`engine/index.html`), every element id `engine/app.js` reads must exist, and the page's control defaults must
   match the design-config defaults.
 - `design-config.js` must turn a design into exactly the build params `app.js` would (checked by running
   `app.js` against a fake page), so a server can later rebuild the same STL from a saved design.
@@ -52,8 +52,8 @@ and archive the old repo. Nothing here depends on it at runtime.
    node fretboard-builder/engine/test.js
    npm --prefix functions test
    ```
-3. If a test says an element id is missing, a control was added or renamed upstream: copy that control's
-   markup from the standalone `index.html` into `fretboard-builder.html`, and add a field for it to
+3. If a test says an element id is missing or the controls differ, a control was added or changed upstream: copy the
+   controls markup from `engine/index.html` into `fretboard-builder.html`, and add any new option to
    `FIELDS` in `design-config.js` (a new field with a default is backward compatible; see the notes at the
    top of that file).
 4. Commit on a branch in GitHub Desktop, push, open a PR and check the preview link.
@@ -63,14 +63,17 @@ and archive the old repo. Nothing here depends on it at runtime.
 Every option on the page is captured as a small versioned JSON document:
 
 ```json
-{ "schema": "mjg.fretboard-design", "version": 1, "engine": "fretboard-builder@fe04491",
-  "params": { "strings": 4, "frets": 19, "fretMode": "chromatic", "scaleIn": 23.5, "...": "..." } }
+{ "schema": "mjg.fretboard-design", "version": 2, "engine": "fretboard-builder@<commit>",
+  "params": { "preset": "custom", "strings": 4, "frets": 19, "fretMode": "chromatic", "scaleIn": 23.5, "...": "..." } }
 ```
 
 - The address bar always carries the current design as `fretboard-builder.html#design=<base64url JSON>`; the
   **Copy link to this design** button copies it. Opening such a link loads that design. The `#` part never
   reaches a server.
 - Bad or out-of-range values in a link are reset or clamped (the page says so).
+- `preset` (v2) records which standard layout the design started from (`t-style`, `lp-style`, or `custom`).
+  The values are always what gets built; a preset label that no longer matches its values loads as `custom`.
+  Links made before presets existed (v1) still load, as `custom`.
 - `FretboardDesign.toBuildParams(params, Fretboard)` turns a design into `Fretboard.buildFretboard()` params,
   so the exact STL can be regenerated anywhere (browser or Node).
 

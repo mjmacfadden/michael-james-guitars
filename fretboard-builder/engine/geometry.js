@@ -94,6 +94,65 @@
     'pentatonic-plus': [0, 3, 5, 6, 7, 10]
   };
 
+  // Standard fretboard presets. Values use the builder's form units
+  // (inches, except slotHeightMm) and keys match the design config.
+  // Each is a common published 6-string electric spec; boards stay flat
+  // (no radius) and printing/mounting options are left alone.
+  //   t-style:  25.5" scale, 22 medium-jumbo frets (.046" tall),
+  //             1.650" nut, ~2.2" wide at the heel.
+  //   lp-style: 24.75" scale, 22 medium-jumbo frets (.045" tall),
+  //             1.695" nut, 2.26" at the end of the board.
+  // slotHeightMm 0.25 = .010" over fret 1 at the treble string, the
+  // usual electric setup target (the bass side sits up to 0.2 mm higher).
+  var PRESETS = {
+    't-style': {
+      label: 'T-Style',
+      values: { strings: 6, frets: 22, fretMode: 'chromatic', scaleIn: 25.5,
+        nutWidthIn: 1.65, heelWidthIn: 2.2, fretHeightIn: 0.046, slotHeightMm: 0.25 }
+    },
+    'lp-style': {
+      label: 'LP-Style',
+      values: { strings: 6, frets: 22, fretMode: 'chromatic', scaleIn: 24.75,
+        nutWidthIn: 1.695, heelWidthIn: 2.26, fretHeightIn: 0.045, slotHeightMm: 0.25 }
+    }
+  };
+  var PRESET_KEYS = ['strings', 'frets', 'fretMode', 'scaleIn', 'nutWidthIn',
+    'heelWidthIn', 'fretHeightIn', 'slotHeightMm'];
+
+  /**
+   * Which preset (if any) a set of form-unit values matches exactly:
+   * returns a PRESETS id, or 'custom'.
+   */
+  function matchPreset(values) {
+    var ids = Object.keys(PRESETS);
+    for (var i = 0; i < ids.length; i++) {
+      var v = PRESETS[ids[i]].values, ok = true;
+      for (var k = 0; k < PRESET_KEYS.length && ok; k++) {
+        var a = v[PRESET_KEYS[k]], b = values ? values[PRESET_KEYS[k]] : undefined;
+        ok = typeof a === 'number' ? Math.abs(a - Number(b)) < 1e-9 : a === b;
+      }
+      if (ok) return ids[i];
+    }
+    return 'custom';
+  }
+
+  /** A preset as buildFretboard() overrides (mm), to merge onto other params. */
+  function presetParams(id) {
+    var p = PRESETS[id];
+    if (!p) return {};
+    var v = p.values, IN = 25.4;
+    return {
+      strings: v.strings,
+      frets: v.frets,
+      fretSteps: FRET_MODES[v.fretMode] || null,
+      scaleMm: v.scaleIn * IN,
+      nutWidthMm: v.nutWidthIn * IN,
+      heelWidthMm: v.heelWidthIn * IN,
+      fretHeightMm: v.fretHeightIn * IN,
+      slotHeightMm: v.slotHeightMm
+    };
+  }
+
   /** Distance from the nut to fret n (n = 0 is the nut itself). */
   function fretDistance(scaleMm, n) {
     return scaleMm * (1 - Math.pow(2, -n / 12));
@@ -1293,7 +1352,7 @@
       }
 
       // --- headstock extension (first piece only) ----------------------
-      // A Strat-style tongue past the nut: a FLAT portion at full
+      // A classic electric-style tongue past the nut: a FLAT portion at full
       // thickness extends headstockExtMm past the nut, then a 45-degree
       // taper runs down the full board thickness to the tip — so the
       // total reach past the nut is headstockExtMm + thicknessMm.
@@ -1382,6 +1441,10 @@
     MARKER_FRETS: MARKER_FRETS,
     STRING_GAUGES: STRING_GAUGES,
     FRET_MODES: FRET_MODES,
+    PRESETS: PRESETS,
+    PRESET_KEYS: PRESET_KEYS,
+    matchPreset: matchPreset,
+    presetParams: presetParams,
     fretDistance: fretDistance,
     planSplits: planSplits,
     buildFretboard: buildFretboard,

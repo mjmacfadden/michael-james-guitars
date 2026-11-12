@@ -14,9 +14,18 @@
   <p class="fb-sub">Free to use. Everything runs in your browser: preview it in 3D, then download the STL for your printer.</p>
 </section>
 
-<div class="fb-builder" id="fb-builder" data-engine-version="fretboard-builder@fe04491">
+<div class="fb-builder" id="fb-builder" data-engine-version="fretboard-builder@43b89bd">
   <section class="fb-panel controls" aria-label="Fretboard options">
     <h2>Your build</h2>
+
+    <label>
+      Preset <span class="hint">(standard 6-string scale, frets, nut and widths; the board stays flat)</span>
+      <select id="preset">
+        <option value="custom" selected>Custom — your own settings</option>
+        <option value="t-style">T-Style — 25.5″ scale, 22 frets, 1.650″ nut</option>
+        <option value="lp-style">LP-Style — 24.75″ scale, 22 frets, 1.695″ nut</option>
+      </select>
+    </label>
 
 
     <label>
@@ -52,8 +61,8 @@
           <option value="23">23″ — travel / kids</option>
           <option value="23.5" selected>23.5″ — CBG</option>
           <option value="24">24″ — short scale</option>
-          <option value="24.75">24.75″ — Gibson style</option>
-          <option value="25.5">25.5″ — Fender style</option>
+          <option value="24.75">24.75″ — medium scale</option>
+          <option value="25.5">25.5″ — long scale</option>
           <option value="custom">Custom…</option>
         </select>
         <input type="number" id="scale" value="23.5" min="18" max="30" step="0.05">
@@ -159,7 +168,7 @@
       </label>
       <label class="check">
         <input type="checkbox" id="headstock-ext" checked>
-        Headstock extension — ¼″ flat past the nut, then a 45° taper (Strat style)
+        Headstock extension — ¼″ flat past the nut, then a 45° taper (classic electric style)
       </label>
       <label class="check">
         <input type="checkbox" id="seam-keys" checked>
@@ -180,9 +189,9 @@
         <select id="fb-radius">
           <option value="0" selected>Flat (off)</option>
           <option value="406.4">16″ — flatter, modern</option>
-          <option value="304.8">12″ — Gibson style</option>
-          <option value="241.3">9.5″ — modern Fender</option>
-          <option value="184.15">7.25″ — vintage Fender</option>
+          <option value="304.8">12″ — medium</option>
+          <option value="241.3">9.5″ — modern</option>
+          <option value="184.15">7.25″ — vintage</option>
         </select>
       </label>
     </details>

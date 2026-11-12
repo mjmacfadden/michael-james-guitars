@@ -3,9 +3,9 @@
  *
  * A design is a small, versioned JSON document holding every user-facing option on the
  * builder page. It is what a share link carries today and what a future custom order would
- * carry (see ORDERING.md). Shape (schema version 1):
+ * carry (see ORDERING.md). Shape (schema version 2):
  *
- *   { "schema": "mjg.fretboard-design", "version": 1,
+ *   { "schema": "mjg.fretboard-design", "version": 2,
  *     "engine": "fretboard-builder@<commit>",          // geometry version that produced it
  *     "params": { "strings": 4, "frets": 19, ... } }   // every field in FIELDS, in FIELDS order
  *
@@ -17,6 +17,10 @@
  *   should reject any design that produces warnings.
  * - Adding a field with a default is backwards compatible (old links keep working). Renaming,
  *   removing or changing the meaning of a field needs VERSION + 1 and a migrate step in normalize().
+ * - Version history: v1 = all form options. v2 adds "preset" ('custom' | 't-style' | 'lp-style').
+ *   The params are always the source of truth; "preset" only records which standard layout they
+ *   came from, and is kept only while the preset's fields still match it (else 'custom').
+ *   v1 designs load as v2 with preset 'custom' (no warning).
  *
  * Works in the browser (window.FretboardDesign) and in Node (module.exports) for tests.
  * No DOM side effects except the guarded boot block at the bottom, which applies a shared
@@ -26,7 +30,8 @@
   'use strict';
 
   var SCHEMA = 'mjg.fretboard-design';
-  var VERSION = 1;
+  var VERSION = 2;
+  var SUPPORTED_VERSIONS = [1, 2];
   var HASH_KEY = 'design';
   var IN = 25.4;
   // Custom orders are NOT live. Flip only when the backend described in ORDERING.md exists.
@@ -34,6 +39,7 @@
 
   // key: JSON name · id: form control id · type: int | num | bool | enum
   var FIELDS = [
+    { key: 'preset', id: 'preset', type: 'enum', values: ['custom', 't-style', 'lp-style'], def: 'custom' },
     { key: 'strings', id: 'strings', type: 'enum', values: [2, 3, 4, 5, 6], def: 4 },
     { key: 'frets', id: 'frets', type: 'int', min: 12, max: 24, def: 19 },
     { key: 'fretMode', id: 'fret-mode', type: 'enum', values: ['chromatic', 'diatonic', 'pentatonic', 'pentatonic-plus'], def: 'chromatic' },
@@ -57,6 +63,12 @@
     { key: 'edgeFilletMm', id: 'edge-fillet', type: 'enum', values: [0, 0.5, 1, 1.5, 2], def: 1 },
     { key: 'radiusMm', id: 'fb-radius', type: 'enum', values: [0, 406.4, 304.8, 241.3, 184.15], def: 0 }
   ];
+
+  // Fretboard (engine/geometry.js) holds the preset table. Browser: global; Node: require.
+  function engineApi() {
+    if (root.Fretboard) return root.Fretboard;
+    try { return typeof require === 'function' ? require('./engine/geometry.js') : null; } catch (e) { return null; }
+  }
 
   function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
@@ -95,10 +107,11 @@
     var src = input && typeof input === 'object' ? input : {};
     if (input && typeof input === 'object') {
       if (src.schema !== undefined && src.schema !== SCHEMA) warn('not a fretboard design');
-      if (src.version !== undefined && src.version !== VERSION) {
-        // Only v1 exists. A future v2 adds a migrate step here (v1 -> v2) instead of a warning.
+      // v1 -> v2 needs no data change: v1 has no "preset", which defaults to 'custom'.
+      if (src.version !== undefined && SUPPORTED_VERSIONS.indexOf(src.version) === -1) {
         warn('design version ' + src.version + ' is not supported; using defaults where needed');
       }
+      if (src.version === 1 && src.params && src.params.preset !== undefined) warn('v1 designs have no preset');
     } else {
       warn('design must be an object');
     }
@@ -110,6 +123,13 @@
       params[f.key] = normalizeValue(f, rawParams[f.key], warn);
     });
     Object.keys(rawParams).forEach(function (k) { if (!known[k]) warn('unknown field ' + k + ' ignored'); });
+    if (src.version === 1) params.preset = 'custom';
+    // A preset label only stands while its fields still hold the preset's values.
+    var FB = engineApi();
+    if (params.preset !== 'custom' && FB && FB.matchPreset(params) !== params.preset) {
+      warn('preset ' + params.preset + ' does not match its settings; shown as Custom');
+      params.preset = 'custom';
+    }
     var engine = (opts && opts.engine) || (typeof src.engine === 'string' ? src.engine : null);
     var config = { schema: SCHEMA, version: VERSION, engine: engine || 'unknown', params: params };
     return { config: config, warnings: warnings };

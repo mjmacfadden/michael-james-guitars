@@ -925,4 +925,115 @@ function boundaryEdgeCount(tris) {
   console.log('R ok: 1 mm default top-edge fillet; 0/1/2 mm watertight, bottom flat + footprint unchanged, frets/nut inside the round-over; seam pins/sockets clear of it on 3-piece boards');
 }
 
+// S. Presets: table, flat watertight builds, and the form behaviour in
+// app.js (pick a preset -> fields filled; edit a field -> back to Custom).
+{
+  const fs = require('fs');
+  const path = require('path');
+  const vm = require('vm');
+  const IN = 25.4;
+  const ids = Object.keys(Fretboard.PRESETS);
+  assert.deepStrictEqual(ids, ['t-style', 'lp-style'], 'S: preset ids');
+  for (const id of ids) {
+    const v = Fretboard.PRESETS[id].values;
+    assert.deepStrictEqual(Object.keys(v).sort(), Fretboard.PRESET_KEYS.slice().sort(), `S ${id}: every preset key set`);
+    assert.strictEqual(Fretboard.matchPreset(v), id, `S ${id}: matches itself`);
+    for (const k of Fretboard.PRESET_KEYS) {
+      const off = Object.assign({}, v, { [k]: typeof v[k] === 'number' ? v[k] + 0.01 : 'diatonic' });
+      assert.strictEqual(Fretboard.matchPreset(off), 'custom', `S ${id}: changing ${k} is Custom`);
+    }
+  }
+  assert.strictEqual(Fretboard.matchPreset({}), 'custom');
+  assert.deepStrictEqual(Fretboard.presetParams('custom'), {}, 'S: Custom changes nothing');
+  const t = Fretboard.PRESETS['t-style'].values, lp = Fretboard.PRESETS['lp-style'].values;
+  assert.ok(t.scaleIn === 25.5 && t.frets === 22 && Math.abs(t.nutWidthIn * IN - 42) < 0.1, 'S: T-Style 25.5in / 22 frets / ~42 mm nut');
+  assert.ok(lp.scaleIn === 24.75 && lp.frets === 22 && Math.abs(lp.nutWidthIn * IN - 43) < 0.1, 'S: LP-Style 24.75in / 22 frets / ~43 mm nut');
+
+  // App defaults + each preset: flat, watertight, true to the preset.
+  const appDefaults = { thicknessMm: 0.2 * IN, tailMm: 1.2 * IN, nutScrew: true, tailCornerRadiusMm: 6.35,
+    headstockExtMm: 6.35, edgeFilletMm: 1, splitAfterFrets: [7], seamKeys: true, skipMarkers: [17] };
+  for (const id of ids) {
+    const v = Fretboard.PRESETS[id].values;
+    const S = Fretboard.buildFretboard(Object.assign({}, appDefaults, Fretboard.presetParams(id)), earcut);
+    assert.strictEqual(boundaryEdgeCount(S.triangles), 0, `S ${id}: open edges`);
+    S.pieces.forEach((pc, i) => assert.strictEqual(boundaryEdgeCount(pc.triangles), 0, `S ${id} piece ${i + 1}: open edges`));
+    assert.ok(Fretboard.signedVolume(S.triangles) > 0, `S ${id}: positive volume`);
+    approx(S.meta.fretDistancesMm[12], v.scaleIn * IN / 2, 1e-6, `S ${id}: fret 12 at half scale`);
+    assert.strictEqual(S.meta.keptFrets.length, 22, `S ${id}: 22 frets`);
+    approx(S.meta.nutWidthMm, v.nutWidthIn * IN, 1e-6, `S ${id}: nut width`);
+    assert.strictEqual(S.meta.stringGaugesIn.length, 6, `S ${id}: 6 nut slots`);
+    let minZ = Infinity;
+    for (let i = 2; i < S.triangles.length; i += 3) minZ = Math.min(minZ, S.triangles[i]);
+    approx(minZ, 0, 1e-9, `S ${id}: flat bottom at z=0`);
+    // flat board: the top at the centreline and near the edge is the same height
+    const y = S.meta.fretDistancesMm[3] - 4, half = (v.nutWidthIn * IN) / 2;
+    const zc = rayDown(S.triangles, 0, y), ze = rayDown(S.triangles, half - 4, y);
+    approx(zc, ze, 1e-6, `S ${id}: no radius`);
+  }
+
+  // The form: run app.js against a tiny fake DOM built from index.html.
+  const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  const presetBlock = html.slice(html.indexOf('id="preset"'), html.indexOf('</select>', html.indexOf('id="preset"')));
+  assert.deepStrictEqual([...presetBlock.matchAll(/<option value="([^"]+)"/g)].map(m => m[1]), ['custom'].concat(ids), 'S: menu lists Custom + presets');
+  assert.match(presetBlock, /<option value="custom" selected>/, 'S: Custom is the default');
+  const els = new Map();
+  const mk = (id) => {
+    const l = {};
+    return { id, value: '', checked: false, hidden: false, textContent: '', innerHTML: '', style: {}, options: [],
+      addEventListener(type, fn) { (l[type] = l[type] || []).push(fn); },
+      dispatch(type) { (l[type] || []).forEach(fn => fn({ type, target: this })); },
+      appendChild() {}, focus() {}, remove() {}, setAttribute() {} };
+  };
+  for (const m of html.matchAll(/<(input|select|div|span|p|tbody|label)\b([^>]*)\bid="([^"]+)"([^>]*)>/g)) {
+    const el = mk(m[3]); const attrs = m[2] + m[4];
+    if (m[1] === 'input') { el.value = (attrs.match(/value="([^"]*)"/) || [, ''])[1]; el.checked = /\bchecked\b/.test(attrs); }
+    if (m[1] === 'select') {
+      const blk = html.slice(m.index, html.indexOf('</select>', m.index));
+      el.options = [...blk.matchAll(/<option value="([^"]*)"( selected)?/g)].map(o => ({ value: o[1], selected: !!o[2] }));
+      el.value = (el.options.find(o => o.selected) || el.options[0]).value;
+    }
+    els.set(m[3], el);
+  }
+  const document = { getElementById: id => els.get(id) || null, createElement: () => Object.assign(mk(''), { getContext: () => null }), body: mk('body') };
+  let lastParams = null, builds = 0;
+  const FB = Object.assign({}, Fretboard, { buildFretboard: (p, e) => { lastParams = p; builds++; return Fretboard.buildFretboard(p, e); } });
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8'),
+    { document, window: { addEventListener() {}, devicePixelRatio: 1 }, Fretboard: FB, earcut, STLExport: {}, Map, Math, Float32Array, setTimeout });
+  const $ = id => els.get(id);
+  const before = JSON.stringify(lastParams);
+  const pick = (id) => { $('preset').value = id; $('preset').dispatch('change'); };
+  pick('custom');
+  assert.strictEqual(JSON.stringify(lastParams), before, 'S: picking Custom changes nothing');
+  for (const id of ids) {
+    const v = Fretboard.PRESETS[id].values, n = builds;
+    pick(id);
+    assert.strictEqual(builds, n + 1, `S ${id}: one rebuild`);
+    assert.strictEqual($('preset').value, id, `S ${id}: menu keeps the preset after applying it`);
+    assert.strictEqual($('scale-preset').value, String(v.scaleIn), `S ${id}: scale menu follows`);
+    const pp = Fretboard.presetParams(id);
+    for (const k of Object.keys(pp)) {
+      if (k === 'fretSteps') assert.strictEqual(lastParams.fretSteps, pp.fretSteps, `S ${id}: ${k}`);
+      else approx(lastParams[k], pp[k], 1e-9, `S ${id}: build used preset ${k}`);
+    }
+    assert.strictEqual(lastParams.radiusMm, 0, `S ${id}: still flat`);
+    assert.strictEqual(lastParams.edgeFilletMm, 1, `S ${id}: round-over untouched`);
+  }
+  // editing a preset field flips the menu to Custom and keeps the edit
+  const edits = [['nut-width', 'input', '1.7'], ['scale', 'input', '25'], ['strings', 'change', '4'], ['frets', 'input', '21'],
+    ['fret-mode', 'change', 'diatonic'], ['heel-width', 'input', '2'], ['fret-height', 'input', '0.04'], ['slot-height', 'input', '0.3'],
+    ['scale-preset', 'change', '23.5']];
+  for (const [id, type, val] of edits) {
+    pick('t-style');
+    $(id).value = val; $(id).dispatch(type);
+    assert.strictEqual($('preset').value, 'custom', `S: editing #${id} switches to Custom`);
+  }
+  // options the preset doesn't set leave it selected
+  pick('lp-style');
+  $('edge-fillet').value = '2'; $('edge-fillet').dispatch('change');
+  $('split').value = '5,12'; $('split').dispatch('change');
+  assert.strictEqual($('preset').value, 'lp-style', 'S: printing options keep the preset');
+  assert.strictEqual(lastParams.edgeFilletMm, 2);
+  console.log('S ok: T-Style / LP-Style presets build flat and watertight; picking one fills the form, editing its fields switches to Custom');
+}
+
 console.log('\nALL GEOMETRY TESTS PASSED');

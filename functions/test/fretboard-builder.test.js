@@ -44,6 +44,12 @@ test('page has every element id engine/app.js uses, and store chrome', () => {
   assert.ok(page.indexOf('design-config.js') < page.indexOf('engine/app.js'));
 });
 
+test('store page controls are the standalone page controls (same markup, whitespace aside)', () => {
+  const up = readFileSync(enginePath('index.html'), 'utf8');
+  const block = (h) => h.slice(h.indexOf('<h2>Your build</h2>'), h.indexOf('<div id="downloads">')).replace(/\s+/g, ' ').trim();
+  assert.equal(block(page), block(up));
+});
+
 test('every store page links to the builder in the nav', () => {
   for (const f of ['index.html', 'about.html', 'faq.html', 'contact.html', 'product.html', 'success.html', 'cancel.html', '404.html']) {
     assert.match(readFileSync(new URL(f, root), 'utf8'), /<nav id="site-nav"><div class="nav-inner"><a href="fretboard-builder.html">Fretboard Builder<\/a>/, f);
@@ -69,7 +75,8 @@ test('design defaults match the page control defaults', () => {
 test('design config: versioned, canonical, URL round-trip, lenient normalize with warnings', () => {
   const c = D.create({ strings: 3, split: 'auto', bedLengthMm: 250, radiusMm: 304.8, fretMode: 'diatonic' }, 'fretboard-builder@test');
   assert.equal(c.schema, 'mjg.fretboard-design');
-  assert.equal(c.version, 1);
+  assert.equal(c.version, 2);
+  assert.equal(c.params.preset, 'custom');
   assert.deepEqual(Object.keys(c.params), D.FIELDS.map((f) => f.key));
   const enc = D.encode(c);
   assert.match(enc, /^[A-Za-z0-9_-]+$/);
@@ -84,14 +91,19 @@ test('design config: versioned, canonical, URL round-trip, lenient normalize wit
   assert.equal(n.config.params.nutScrew, true);
   assert.equal(n.config.params.scaleIn, 24);
   assert.equal(n.warnings.length, 4);
-  assert.ok(D.normalize({ schema: 'mjg.fretboard-design', version: 2, params: {} }).warnings.length > 0);
+  assert.ok(D.normalize({ schema: 'mjg.fretboard-design', version: 3, params: {} }).warnings.length > 0);
 });
 
 // Minimal fake DOM so engine/app.js can run headless: proves toBuildParams() == app.js readParams().
 function fakeDom(html) {
   const els = new Map();
-  const mk = (id) => ({ id, value: '', checked: false, hidden: false, textContent: '', innerHTML: '', style: {}, options: [],
-    clientWidth: 0, clientHeight: 0, addEventListener() {}, appendChild() {}, focus() {}, remove() {}, setAttribute() {} });
+  const mk = (id) => {
+    const l = {};
+    return { id, value: '', checked: false, hidden: false, textContent: '', innerHTML: '', style: {}, options: [],
+      clientWidth: 0, clientHeight: 0, appendChild() {}, focus() {}, remove() {}, setAttribute() {},
+      addEventListener(type, fn) { (l[type] = l[type] || []).push(fn); },
+      dispatch(type) { (l[type] || []).forEach((fn) => fn({ type, target: this })); } };
+  };
   for (const m of html.matchAll(/<(input|select|div|span|p|tbody|label)\b([^>]*)\bid="([^"]+)"([^>]*)>/g)) {
     const el = mk(m[3]); const attrs = m[2] + m[4];
     if (m[1] === 'input') { el.value = (attrs.match(/value="([^"]*)"/) || [, ''])[1]; el.checked = /\bchecked\b/.test(attrs); }
@@ -111,7 +123,7 @@ function appReadParams(config) {
   let captured = null;
   const FB = { ...Fretboard, buildFretboard: (p, e) => { captured = p; return Fretboard.buildFretboard(p, e); } };
   vm.runInNewContext(appSrc, { document, window: { addEventListener() {}, devicePixelRatio: 1 }, Fretboard: FB, earcut, STLExport: {}, Map, Math, Float32Array, setTimeout });
-  return { params: captured, document };
+  return { params: captured, document, last: () => captured };
 }
 
 test('toBuildParams() mirrors engine/app.js for a spread of designs, and the form round-trips', () => {
@@ -154,8 +166,64 @@ test('Hosting staging ships the builder but not its tests or docs; /fretboard-bu
     const pub = (p) => existsSync(new URL(`public/${p}`, root));
     for (const p of ['fretboard-builder.html', 'fretboard-builder/design-config.js', 'fretboard-builder/store-page.js', 'fretboard-builder/builder.css',
       'fretboard-builder/engine/app.js', 'fretboard-builder/engine/geometry.js', 'fretboard-builder/engine/stl.js', 'fretboard-builder/engine/vendor/earcut.min.js']) assert.ok(pub(p), p);
-    for (const p of ['fretboard-builder/engine/test.js', 'fretboard-builder/README.md', 'fretboard-builder/ORDERING.md']) assert.ok(!pub(p), p);
+    for (const p of ['fretboard-builder/engine/test.js', 'fretboard-builder/engine/index.html', 'fretboard-builder/README.md', 'fretboard-builder/ORDERING.md']) assert.ok(!pub(p), p);
   } finally { rmSync(new URL('public/', root), { recursive: true, force: true }); }
   const f = JSON.parse(readFileSync(new URL('firebase.json', root), 'utf8'));
   assert.deepEqual(f.hosting.redirects.map((r) => [r.source, r.destination]), [['/fretboard-builder', '/fretboard-builder.html'], ['/fretboard-builder/', '/fretboard-builder.html']]);
+});
+
+const b64url = (o) => Buffer.from(JSON.stringify(o)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const plain = (o) => JSON.parse(JSON.stringify(o));
+
+test('presets: picking one fills the form and the design; editing a preset field switches to Custom', () => {
+  for (const id of ['t-style', 'lp-style']) {
+    const { document, last } = appReadParams(D.create({}, manifest.engineVersion));
+    const sel = document.getElementById('preset');
+    assert.equal(sel.value, 'custom');
+    sel.value = id; sel.dispatch('change');
+    const design = D.readForm(document, manifest.engineVersion);
+    assert.equal(design.params.preset, id);
+    for (const [k, v] of Object.entries(Fretboard.PRESETS[id].values)) assert.equal(design.params[k], v, `${id} ${k}`);
+    assert.deepEqual(D.toBuildParams(design.params, Fretboard), plain(last()), `${id}: app.js built the preset`);
+    assert.equal(last().radiusMm, 0, 'boards stay flat');
+    // an edit to a preset field flips the menu, and the design follows
+    const nut = document.getElementById('nut-width');
+    nut.value = '1.75'; nut.dispatch('input');
+    assert.equal(sel.value, 'custom');
+    const edited = D.readForm(document, manifest.engineVersion);
+    assert.equal(edited.params.preset, 'custom');
+    assert.equal(edited.params.nutWidthIn, 1.75);
+  }
+});
+
+test('presets: share link round-trips (preset + values), and a hand-edited link falls back to Custom', () => {
+  const t = Fretboard.PRESETS['t-style'].values;
+  const c = D.create({ ...t, preset: 't-style', split: '5,12' }, manifest.engineVersion);
+  assert.equal(c.params.preset, 't-style');
+  const url = D.shareUrl(c, 'https://example.test/fretboard-builder.html');
+  const back = D.fromHash(url.slice(url.indexOf('#')));
+  assert.deepEqual(back, { config: c, warnings: [] });
+  // opening the link: applied before app.js runs, menu shows the preset, build uses its values
+  const { params, document } = appReadParams(back.config);
+  assert.equal(document.getElementById('preset').value, 't-style');
+  assert.equal(document.getElementById('scale-preset').value, '25.5');
+  assert.deepEqual(D.toBuildParams(c.params, Fretboard), plain(params));
+  assert.deepEqual(D.readForm(document, manifest.engineVersion), c);
+  // preset label that no longer matches its values -> Custom (with a warning for strict callers)
+  const forged = D.decode(b64url({ ...c, params: { ...c.params, scaleIn: 25 } }));
+  assert.equal(forged.config.params.preset, 'custom');
+  assert.equal(forged.warnings.length, 1);
+});
+
+test('v1 share links (before presets) still load, as Custom with no warnings', () => {
+  const v1params = { strings: 3, frets: 17, fretMode: 'diatonic', scaleIn: 25.5, nutWidthIn: 1.65, heelWidthIn: 2.2, split: '0' };
+  const r = D.fromHash('#design=' + b64url({ schema: 'mjg.fretboard-design', version: 1, engine: 'fretboard-builder@fe04491', params: v1params }));
+  assert.deepEqual(r.warnings, []);
+  assert.equal(r.config.version, 2);
+  assert.equal(r.config.engine, 'fretboard-builder@fe04491');
+  assert.equal(r.config.params.preset, 'custom');
+  for (const [k, v] of Object.entries(v1params)) assert.equal(r.config.params[k], v, k);
+  // even a v1 design whose values happen to equal a preset stays Custom (v1 had no presets)
+  const same = D.fromHash('#design=' + b64url({ schema: 'mjg.fretboard-design', version: 1, params: Fretboard.PRESETS['lp-style'].values }));
+  assert.equal(same.config.params.preset, 'custom');
 });

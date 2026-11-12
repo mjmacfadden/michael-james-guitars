@@ -19,7 +19,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const engineDir = path.join(root, 'fretboard-builder', 'engine');
 const manifestPath = path.join(root, 'fretboard-builder', 'UPSTREAM.json');
 // Files taken verbatim from upstream. Everything else in fretboard-builder/ is store-specific.
-export const ENGINE_FILES = ['geometry.js', 'stl.js', 'app.js', 'test.js', 'LICENSE', 'vendor/earcut.min.js', 'vendor/earcut-LICENSE'];
+// index.html is the standalone page: kept for test.js (it reads the form markup) and as the
+// reference the store page's controls are checked against. It is not published by Hosting.
+export const ENGINE_FILES = ['geometry.js', 'stl.js', 'app.js', 'test.js', 'index.html', 'LICENSE', 'vendor/earcut.min.js', 'vendor/earcut-LICENSE'];
 
 const sha256 = (file) => createHash('sha256').update(readFileSync(file)).digest('hex');
 
