@@ -3,6 +3,10 @@
     "site": "michael-james-guitars",
     "public": "public",
     "cleanUrls": false,
+    "redirects": [
+      { "source": "/fretboard-builder", "destination": "/fretboard-builder.html", "type": 301 },
+      { "source": "/fretboard-builder/", "destination": "/fretboard-builder.html", "type": 301 }
+    ],
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       { "source": "/api/checkout", "function": { "functionId": "createCheckoutSession", "region": "us-central1" } },
