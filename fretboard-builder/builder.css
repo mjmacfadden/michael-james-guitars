@@ -1,0 +1,63 @@
+/* Fretboard Builder page: store look (css/style.css variables), scoped to the builder. */
+.fb-builder [hidden]{display:none!important}
+.fb-intro{max-width:760px;margin-bottom:28px}
+.fb-intro h1{margin:0 0 10px;font-size:clamp(2rem,4vw,2.6rem)}
+.fb-intro p{margin:0 0 10px;font-size:1.1rem}
+.fb-intro .fb-sub{font-size:1rem;color:#5c4a36}
+
+.fb-builder{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start}
+@media(max-width:820px){.fb-builder{grid-template-columns:1fr}}
+.fb-panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:20px}
+.fb-panel h2{margin:0 0 14px;font-size:1.4rem}
+
+.fb-builder .controls label{display:block;margin:0 0 14px;font-size:.95rem;font-weight:bold}
+.fb-builder .controls select,.fb-builder .controls input[type=number]{font:inherit;font-weight:normal;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink)}
+.fb-builder .controls select:focus,.fb-builder .controls input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.fb-builder .controls label>select,.fb-builder .controls label>input[type=range]{width:100%;margin-top:6px}
+.fb-builder .controls input[type=range],.fb-builder .controls input[type=checkbox]{accent-color:var(--accent)}
+.fb-builder .controls .row{display:flex;gap:8px;align-items:center;margin-top:6px}
+.fb-builder .controls .row select{flex:1;min-width:0}
+.fb-builder .controls .row input[type=number]{width:6rem}
+.fb-builder .controls .unit,.fb-builder .controls .hint{color:#7a6650;font-weight:normal}
+.fb-builder .controls .hint{font-size:.85rem}
+.fb-builder .controls .value{float:right;color:var(--accent)}
+.fb-builder .controls .check{display:flex;gap:8px;align-items:baseline;font-weight:normal}
+.fb-builder .controls .check input{margin:0;flex:0 0 auto}
+.fb-builder .advanced{border-top:1px solid var(--line);padding-top:12px;margin-bottom:16px}
+.fb-builder .advanced summary{cursor:pointer;font-weight:bold;margin-bottom:10px;color:var(--accent)}
+
+/* Download buttons are created by engine/app.js; give them the store's .btn look. */
+#downloads{display:flex;flex-direction:column;gap:8px}
+#downloads button{display:block;width:100%;background:var(--accent);color:#fff;padding:12px 16px;border-radius:4px;border:0;cursor:pointer;font:inherit;font-weight:bold;text-align:center}
+#downloads button:hover{background:#255964}
+.fb-builder .filename{text-align:center;color:#7a6650;font-size:.82rem;margin:8px 0 0;word-break:break-all}
+
+.fb-actions{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.btn.btn-outline{background:transparent;color:var(--accent);border:1px solid var(--accent);padding:10px 16px;text-align:center;width:100%}
+.btn.btn-outline:hover{background:var(--accent);color:#fff}
+.fb-status{margin:0;font-size:.88rem;color:#5c4a36;min-height:1.2em}
+#fb-order{width:100%}
+
+#preview-wrap{position:relative}
+#preview{height:460px;border:1px solid var(--line);border-radius:6px;background:linear-gradient(#f3ead9,#d9c7a5);overflow:hidden;touch-action:none}
+#preview canvas{display:block}
+#preview-fallback{color:#7a4f12}
+@media(max-width:720px){#preview{height:340px}}
+.fb-hint{margin:6px 0 0;font-size:.82rem;color:#7a6650;text-align:center}
+
+.fb-builder .readouts{margin-top:16px}
+.fb-builder .readouts>div{display:flex;gap:16px;padding:8px 0;border-bottom:1px solid var(--line)}
+.fb-builder .readouts .k{flex:0 0 7.5rem;font-weight:bold}
+.fb-builder .readouts .v{flex:1}
+.fb-builder .warning{background:#fff3b0;border:1px dashed #c9a400;border-radius:4px;padding:10px 12px;margin:16px 0 0}
+
+.fb-builder .fret-table{margin-top:16px}
+.fb-builder .fret-table summary{cursor:pointer;font-weight:bold;color:var(--accent)}
+.fb-builder .fret-table table{margin-top:10px;max-width:440px}
+.fb-builder .fret-table th,.fb-builder .fret-table td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:right;font-variant-numeric:tabular-nums}
+.fb-builder .fret-table th:first-child,.fb-builder .fret-table td:first-child{text-align:left}
+
+.fb-notes{max-width:760px;margin-top:36px}
+.fb-notes h2{margin:0 0 10px}
+.fb-notes li{margin-bottom:6px}
+nav a[aria-current=page]{color:var(--accent)}

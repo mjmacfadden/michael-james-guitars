@@ -7,6 +7,7 @@ Static site (plain HTML/CSS/JS, no build step) for selling handmade piezo bridge
 - `assets/img/michael_james_logo.png` — header logo. `assets/favicon.svg` — favicon.
 - `assets/img/products/` — product photos.
 - `index.html`, `shop.html`, `product.html?id=...`, `about.html`, `faq.html`, `contact.html`, `success.html`, `cancel.html`, `404.html`.
+- `fretboard-builder.html` + `fretboard-builder/` — the **Fretboard Builder** page (3D-printable cigar box guitar fretboards, all in the browser). The geometry engine in `fretboard-builder/engine/` is synced from the [`fretboard-builder`](https://github.com/mjmacfadden/fretboard-builder) repo; see `fretboard-builder/README.md` (and `ORDERING.md` for future custom orders).
 - Search the repo for `TODO` to find everything still to fill in.
 
 ## Edit products
